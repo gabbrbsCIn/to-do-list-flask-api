@@ -56,7 +56,6 @@ class UsuarioSchema(ma.Schema):
         fields = ('id', 'nome', 'email')
 
 
-
 class ListaDeTarefasSchema(ma.Schema):
     class Meta: 
         fields = ('id', 'titulo', 'descricao')
@@ -65,14 +64,14 @@ class TarefaSchema(ma.Schema):
     class Meta: 
         fields = ('id', 'titulo', 'descricao', 'status', 'prazo_final', 'prioridade')
 
-tarefa_schema = TarefaSchema(strict=True)
-tarefas_schema = TarefaSchema(many=True, strict=True)
+tarefa_schema = TarefaSchema()
+tarefas_schema = TarefaSchema(many=True)
 
-listadetarefa_schema = ListaDeTarefasSchema(strict=True)
-listadetarefas_schema = ListaDeTarefasSchema(many=True, strict=True)
+listadetarefa_schema = ListaDeTarefasSchema()
+listadetarefas_schema = ListaDeTarefasSchema(many=True)
 
-usuario_schema = UsuarioSchema(strict=True)
-usuarios_schema = UsuarioSchema(many=True, strict=True)
+usuario_schema = UsuarioSchema()
+usuarios_schema = UsuarioSchema(many=True)
 
 with app.app_context():
     db.create_all()
