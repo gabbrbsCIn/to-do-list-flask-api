@@ -87,6 +87,14 @@ def add_user():
 
     return usuario_schema.jsonify(new_user)
 
+@app.route('/users', methods=['GET'])
+def get_users():
+
+    all_users=Usuario.query.all()
+    result = usuarios_schema.dump(all_users)
+
+    return jsonify(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
