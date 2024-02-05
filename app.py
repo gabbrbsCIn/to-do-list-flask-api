@@ -56,7 +56,6 @@ class UsuarioSchema(ma.Schema):
         fields = ('id', 'nome', 'email')
 
 
-
 class ListaDeTarefasSchema(ma.Schema):
     class Meta: 
         fields = ('id', 'titulo', 'descricao')
@@ -65,10 +64,28 @@ class TarefaSchema(ma.Schema):
     class Meta: 
         fields = ('id', 'titulo', 'descricao', 'status', 'prazo_final', 'prioridade')
 
+tarefa_schema = TarefaSchema()
+tarefas_schema = TarefaSchema(many=True)
+
+listadetarefa_schema = ListaDeTarefasSchema()
+listadetarefas_schema = ListaDeTarefasSchema(many=True)
+
+usuario_schema = UsuarioSchema()
+usuarios_schema = UsuarioSchema(many=True)
+
 with app.app_context():
     db.create_all()
 
+@app.route('/users', methods=['POST'])
+def add_user():
+    nome = request.json['nome']
+    email = request.json['email']
 
+    new_user = Usuario(nome,email)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return usuario_schema.jsonify(new_user)
 
 
 if __name__ == '__main__':
