@@ -23,8 +23,8 @@ class Usuario(db.Model):
         
 class ListaDeTarefas(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.String(300), nullable=False)
+    titulo = db.Column(db.String(100), nullable=False, unique=True)
+    descricao = db.Column(db.String(300))
     usuario_id = db.Column(db.Integer(), db.ForeignKey('usuario.id'))
     usuario = db.relationship("Usuario", backref="listadetarefas")
     
@@ -36,9 +36,9 @@ class ListaDeTarefas(db.Model):
 class Tarefa(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     titulo = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.String(300), nullable=False)
+    descricao = db.Column(db.String(300))
     status = db.Column(db.String(10), nullable=False)
-    prazo_final = db.Column(db.DateTime, nullable=True)
+    prazo_final = db.Column(db.DateTime)
     prioridade = db.Column(db.Integer, nullable=False)
     lista_de_tarefas_id = db.Column(db.Integer(), db.ForeignKey('lista_de_tarefas.id'))
     lista_de_tarefas = db.relationship("ListaDeTarefas", backref="tarefa")
