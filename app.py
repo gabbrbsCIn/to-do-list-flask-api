@@ -129,6 +129,11 @@ def login():
             return jsonify({'msg':'logado com sucesso!'})
     return jsonify({'erro': 'Usuário não encontrado'})
 
+@app.route('/logout', methods=['GET','POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({'msg': 'Usuário deslogado!'})
 
 
 
