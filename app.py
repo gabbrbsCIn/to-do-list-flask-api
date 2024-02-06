@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_bcrypt import Bcrypt
+from flask_login import UserMixin
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,10 +12,12 @@ app = Flask(__name__)
 secret_key = os.environ.get("SECRET_KEY")
 
 
-app.config["SECRET_KEY"] = secret_key
+
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql+psycopg2://postgres.egnmntyafgtdjwdhmtbz:Tz8a4oIdPcPArvuO@aws-0-sa-east-1.pooler.supabase.com:6543/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+app.config["SECRET_KEY"] = secret_key
 
+bcrypt = Bcrypt(app)
 db = SQLAlchemy()
 ma = Marshmallow(app)
 db.init_app(app)
