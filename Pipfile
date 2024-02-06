@@ -8,6 +8,13 @@ flask = "*"
 flask-sqlalchemy = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
+flask-login = "*"
+flask-bcrypt = "*"
+flask-wtf = "*"
+wtforms = "*"
+email-validator = "*"
+python-dotenv = "*"
+flask-migrate = "*"
 
 [dev-packages]
 

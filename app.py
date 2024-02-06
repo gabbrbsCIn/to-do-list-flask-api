@@ -1,25 +1,50 @@
+import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_bcrypt import Bcrypt
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from dotenv import load_dotenv
+from flask_migrate import Migrate
+
+
+load_dotenv()
 
 app = Flask(__name__)
 
+secret_key = os.environ.get("SECRET_KEY")
+
+
+
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql+psycopg2://postgres.egnmntyafgtdjwdhmtbz:Tz8a4oIdPcPArvuO@aws-0-sa-east-1.pooler.supabase.com:6543/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+app.config["SECRET_KEY"] = secret_key
 
-db = SQLAlchemy()
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+bcrypt = Bcrypt(app)
+db = SQLAlchemy(app)
 ma = Marshmallow(app)
-db.init_app(app)
+migrate = Migrate(app,db)
 
 
-class Usuario(db.Model):
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
+class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     nome = db.Column(db.String(100), unique=False, nullable=False)
-    email = db.Column(db.String(300), unique=True)
+    email = db.Column(db.String(300), unique=True, nullable=False)
+    senha = db.Column(db.String(300), nullable=False)
 
-    def __init__(self, nome, email):
+    def __init__(self, nome, email, senha):
         self.nome = nome
         self.email = email
+        self.senha = senha
         
 class ListaDeTarefas(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -53,7 +78,7 @@ class Tarefa(db.Model):
 
 class UsuarioSchema(ma.Schema):
     class Meta: 
-        fields = ('id', 'nome', 'email')
+        fields = ('id', 'nome', 'email', 'senha')
 
 
 class ListaDeTarefasSchema(ma.Schema):
@@ -73,19 +98,45 @@ listadetarefas_schema = ListaDeTarefasSchema(many=True)
 usuario_schema = UsuarioSchema()
 usuarios_schema = UsuarioSchema(many=True)
 
-with app.app_context():
-    db.create_all()
+
+# with app.app_context():
+#     db.create_all()
 
 @app.route('/users', methods=['POST'])
 def add_user():
     nome = request.json['nome']
     email = request.json['email']
+    senha = request.json['senha']
 
-    new_user = Usuario(nome,email)
+    hashed_password = bcrypt.generate_password_hash(senha).decode('utf8')
+    new_user = Usuario(nome,email,hashed_password)
     db.session.add(new_user)
     db.session.commit()
 
     return usuario_schema.jsonify(new_user)
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.json['email']
+    senha = request.json['senha']
+
+    user = Usuario.query.filter_by(email=email).first()
+    
+    if user:
+        if bcrypt.check_password_hash(user.senha, senha):
+            login_user(user)
+            return jsonify({'msg':'logado com sucesso!'})
+    return jsonify({'erro': 'Usuário não encontrado'})
+
+@app.route('/logout', methods=['GET','POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({'msg': 'Usuário deslogado!'})
+
+
+
 
 @app.route('/users', methods=['GET'])
 def get_users():
