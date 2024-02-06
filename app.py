@@ -1,11 +1,12 @@
+import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
-from flask_login import UserMixin
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-import os
+
 
 load_dotenv()
 
@@ -19,14 +20,22 @@ app.config['SQLALCHEMY_DATABASE_URI']='postgresql+psycopg2://postgres.egnmntyafg
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config["SECRET_KEY"] = secret_key
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 migrate = Migrate(app,db)
-# db.init_app(app)
 
 
-class Usuario(db.Model):
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
+class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     nome = db.Column(db.String(100), unique=False, nullable=False)
     email = db.Column(db.String(300), unique=True, nullable=False)
@@ -99,12 +108,30 @@ def add_user():
     email = request.json['email']
     senha = request.json['senha']
 
-    hashed_password = bcrypt.generate_password_hash(senha)
+    hashed_password = bcrypt.generate_password_hash(senha).decode('utf8')
     new_user = Usuario(nome,email,hashed_password)
     db.session.add(new_user)
     db.session.commit()
 
     return usuario_schema.jsonify(new_user)
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.json['email']
+    senha = request.json['senha']
+
+    user = Usuario.query.filter_by(email=email).first()
+    
+    if user:
+        if bcrypt.check_password_hash(user.senha, senha):
+            login_user(user)
+            return jsonify({'msg':'logado com sucesso!'})
+    return jsonify({'erro': 'Usuário não encontrado'})
+
+
+
+
 
 @app.route('/users', methods=['GET'])
 def get_users():
