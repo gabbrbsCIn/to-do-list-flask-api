@@ -4,6 +4,8 @@ from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
 from dotenv import load_dotenv
+from flask_migrate import Migrate
+import os
 
 load_dotenv()
 
@@ -18,19 +20,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config["SECRET_KEY"] = secret_key
 
 bcrypt = Bcrypt(app)
-db = SQLAlchemy()
+db = SQLAlchemy(app)
 ma = Marshmallow(app)
-db.init_app(app)
+migrate = Migrate(app,db)
+# db.init_app(app)
 
 
 class Usuario(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     nome = db.Column(db.String(100), unique=False, nullable=False)
-    email = db.Column(db.String(300), unique=True)
+    email = db.Column(db.String(300), unique=True, nullable=False)
+    senha = db.Column(db.String(300), nullable=False)
 
-    def __init__(self, nome, email):
+    def __init__(self, nome, email, senha):
         self.nome = nome
         self.email = email
+        self.senha = senha
         
 class ListaDeTarefas(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -64,7 +69,7 @@ class Tarefa(db.Model):
 
 class UsuarioSchema(ma.Schema):
     class Meta: 
-        fields = ('id', 'nome', 'email')
+        fields = ('id', 'nome', 'email', 'senha')
 
 
 class ListaDeTarefasSchema(ma.Schema):
@@ -84,15 +89,18 @@ listadetarefas_schema = ListaDeTarefasSchema(many=True)
 usuario_schema = UsuarioSchema()
 usuarios_schema = UsuarioSchema(many=True)
 
-with app.app_context():
-    db.create_all()
+
+# with app.app_context():
+#     db.create_all()
 
 @app.route('/users', methods=['POST'])
 def add_user():
     nome = request.json['nome']
     email = request.json['email']
+    senha = request.json['senha']
 
-    new_user = Usuario(nome,email)
+    hashed_password = bcrypt.generate_password_hash(senha)
+    new_user = Usuario(nome,email,hashed_password)
     db.session.add(new_user)
     db.session.commit()
 

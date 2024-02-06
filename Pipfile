@@ -14,6 +14,7 @@ flask-wtf = "*"
 wtforms = "*"
 email-validator = "*"
 python-dotenv = "*"
+flask-migrate = "*"
 
 [dev-packages]
 
