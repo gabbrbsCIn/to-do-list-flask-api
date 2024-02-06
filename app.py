@@ -95,6 +95,20 @@ def get_users():
 
     return jsonify(result)
 
+@app.route('/users/<id>', methods=['PUT'])
+def update_users(id):
+
+    usuario = Usuario.query.get(id)
+    nome = request.json['nome']
+    email = request.json['email']
+
+    usuario.nome = nome
+    usuario.email = email
+
+    db.session.commit()
+
+    return usuario_schema.jsonify(usuario)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
