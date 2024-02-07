@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-
+from sqlalchemy.schema import UniqueConstraint
 
 load_dotenv()
 
@@ -53,6 +53,7 @@ class ListaDeTarefas(db.Model):
     usuario_id = db.Column(db.Integer(), db.ForeignKey('usuario.id'))
     usuario = db.relationship("Usuario", backref="listadetarefas")
     
+    __table_args__ = (UniqueConstraint('titulo', 'usuario_id', name='unique_title_per_user'),)
 
     def __init__(self, titulo, descricao, usuario_id):
         self.titulo = titulo
