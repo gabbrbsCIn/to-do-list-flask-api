@@ -48,7 +48,7 @@ class Usuario(db.Model, UserMixin):
         
 class ListaDeTarefas(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False, unique=True)
+    titulo = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.String(300))
     usuario_id = db.Column(db.Integer(), db.ForeignKey('usuario.id'))
     usuario = db.relationship("Usuario", backref="listadetarefas")
