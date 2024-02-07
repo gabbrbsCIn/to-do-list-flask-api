@@ -186,5 +186,21 @@ def add_todolist():
 
     return listadetarefa_schema.jsonify(new_todolist)
 
+@app.route("/todolist/<id>", methods=['PUT'])
+@login_required
+def update_todolist(id):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    titulo = request.json.get("titulo")  
+    descricao = request.json.get("descricao")
+
+    todolist.titulo = titulo
+    todolist.descricao = descricao
+    
+    db.session.commit()
+
+    return listadetarefa_schema.jsonify(todolist)
+
 if __name__ == '__main__':
     app.run(debug=True)
