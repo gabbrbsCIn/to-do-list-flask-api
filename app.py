@@ -162,6 +162,16 @@ def update_users():
 
     return usuario_schema.jsonify(usuario)
 
+@app.route("/users", methods=['DELETE'])
+@login_required
+def delete_users():
+    user_id = current_user.id
+    usuario = Usuario.query.get(user_id)
+    db.session.delete(usuario)
+    db.session.commit()
+    return jsonify({'msg': 'Usuário excluído com sucesso!'})
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
