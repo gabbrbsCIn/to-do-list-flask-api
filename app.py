@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-
+from sqlalchemy.schema import UniqueConstraint
 
 load_dotenv()
 
@@ -48,15 +48,17 @@ class Usuario(db.Model, UserMixin):
         
 class ListaDeTarefas(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False, unique=True)
+    titulo = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.String(300))
     usuario_id = db.Column(db.Integer(), db.ForeignKey('usuario.id'))
     usuario = db.relationship("Usuario", backref="listadetarefas")
     
+    __table_args__ = (UniqueConstraint('titulo', 'usuario_id', name='unique_title_per_user'),)
 
-    def __init__(self, titulo, descricao):
+    def __init__(self, titulo, descricao, usuario_id):
         self.titulo = titulo
         self.descricao = descricao
+        self.usuario_id = usuario_id
 
 class Tarefa(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -83,7 +85,7 @@ class UsuarioSchema(ma.Schema):
 
 class ListaDeTarefasSchema(ma.Schema):
     class Meta: 
-        fields = ('id', 'titulo', 'descricao')
+        fields = ('id', 'titulo', 'descricao', 'usuario_id')
 
 class TarefaSchema(ma.Schema):
     class Meta: 
@@ -171,7 +173,18 @@ def delete_users():
     db.session.commit()
     return jsonify({'msg': 'Usuário excluído com sucesso!'})
 
-    
+@app.route("/todolist", methods=['POST'])
+@login_required
+def add_todolist():
+    user_id = current_user.id
+    titulo = request.json["titulo"]  
+    descricao = request.json.get("descricao")
+
+    new_todolist = ListaDeTarefas(titulo, descricao, user_id)
+    db.session.add(new_todolist)
+    db.session.commit()
+
+    return listadetarefa_schema.jsonify(new_todolist)
 
 if __name__ == '__main__':
     app.run(debug=True)
