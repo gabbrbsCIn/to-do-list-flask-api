@@ -141,15 +141,17 @@ def logout():
 @app.route('/users', methods=['GET'])
 def get_users():
 
-    all_users=Usuario.query.all()
+    all_users=Usuario.query.with_entities(Usuario.nome, Usuario.email).all()
     result = usuarios_schema.dump(all_users)
 
     return jsonify(result)
 
-@app.route('/users/<id>', methods=['PUT'])
-def update_users(id):
-
-    usuario = Usuario.query.get(id)
+@app.route('/users', methods=['PUT'])
+@login_required
+def update_users():
+    user_id = current_user.id
+    usuario = Usuario.query.get(user_id)
+    
     nome = request.json['nome']
     email = request.json['email']
 
