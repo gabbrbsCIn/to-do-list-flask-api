@@ -73,6 +73,11 @@ def update_users():
 @login_required
 def delete_users():
     user_id = current_user.id
+    listas_do_usuario = ListaDeTarefas.query.filter_by(usuario_id=user_id).all()
+
+    for i in listas_do_usuario:
+        db.session.delete(i)
+
     usuario = Usuario.query.get(user_id)
     db.session.delete(usuario)
     db.session.commit()
@@ -96,6 +101,12 @@ def add_todolist():
 def update_todolist(id):
 
     todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Tarefa não encontrada!'})
+    
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para alterar esta tarefa!'})
 
     titulo = request.json.get("titulo")  
     descricao = request.json.get("descricao")
