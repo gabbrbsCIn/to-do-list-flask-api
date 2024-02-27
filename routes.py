@@ -8,7 +8,7 @@ from schemas import *
 
 bcrypt = Bcrypt(app)
 
-
+#Rotas do Usuário   
 @app.route('/users', methods=['POST'])
 def add_user():
     nome = request.json['nome']
@@ -83,6 +83,11 @@ def delete_users():
     db.session.commit()
     return jsonify({'msg': 'Usuário excluído com sucesso!'})
 
+
+
+
+
+#Rotas da Lista de Tarefas
 @app.route("/todolist", methods=['POST'])
 @login_required
 def add_todolist():
@@ -103,7 +108,7 @@ def update_todolist(id):
     todolist = ListaDeTarefas.query.get(id)
 
     if todolist is None:
-        return jsonify({'erro': 'Tarefa não encontrada!'})
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
     
     if todolist.usuario_id != current_user.id:
         return jsonify({'erro': 'Você não tem permissão para alterar esta tarefa!'})
@@ -117,3 +122,25 @@ def update_todolist(id):
     db.session.commit()
 
     return listadetarefa_schema.jsonify(todolist)
+
+
+@app.route("/todolist/<id>", methods=['DELETE'])
+@login_required
+def delete_todolist(id):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para excluir esta tarefa!'})
+    
+    tarefas_do_usuario = Tarefa.query.filter_by(lista_de_tarefas_id=id).all()
+    for i in tarefas_do_usuario:
+        db.session.delete(i)
+
+    db.session.delete(todolist)
+    db.session.commit()
+
+    return jsonify({'msg': 'Lista de Tarefa excluída com sucesso!'})
