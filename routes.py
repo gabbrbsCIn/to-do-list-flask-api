@@ -144,3 +144,30 @@ def delete_todolist(id):
     db.session.commit()
 
     return jsonify({'msg': 'Lista de Tarefa excluída com sucesso!'})
+    
+#Rotas da Tarefa
+@app.route("/todolist/<id>/task", methods=['POST'])
+@login_required
+def add_task(id):
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para adicionar tarefas a esta lista!'})    
+
+    titulo = request.json["titulo"]  
+    descricao = request.json.get("descricao")
+    status = request.json.get("status")
+    if status == None:
+        status = "A fazer"
+    prazo_final = request.json.get("prazo_final")
+    prioridade = request.json.get("prioridade")
+    if prioridade == None:
+        prioridade = 4
+
+    new_task = Tarefa(titulo, descricao, status, prazo_final, prioridade, id)
+    db.session.add(new_task)
+    db.session.commit()
+
+    return tarefa_schema.jsonify(new_task)

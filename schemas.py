@@ -1,7 +1,6 @@
 from app import ma
 from models import Usuario, ListaDeTarefas, Tarefa
 
-
 class UsuarioSchema(ma.Schema):
     class Meta: 
         fields = ('id', 'nome', 'email', 'senha')
