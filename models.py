@@ -1,6 +1,8 @@
-from app import db, login_manager
+from app import login_manager, app, db, migrate
 from flask_login import UserMixin
 from sqlalchemy.schema import UniqueConstraint
+from flask_sqlalchemy import SQLAlchemy
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -41,11 +43,12 @@ class Tarefa(db.Model):
     lista_de_tarefas_id = db.Column(db.Integer(), db.ForeignKey('lista_de_tarefas.id'))
     lista_de_tarefas = db.relationship("ListaDeTarefas", backref="tarefa")
 
-    def __init__(self, titulo, descricao, status, prazo_final, prioridade):
+    def __init__(self, titulo, descricao, status, prazo_final, prioridade, lista_de_tarefas_id):
         self.titulo = titulo
         self.descricao = descricao
         self.status = status
         self.prazo_final = prazo_final
         self.prioridade = prioridade
+        self.lista_de_tarefas_id = lista_de_tarefas_id
 
 
