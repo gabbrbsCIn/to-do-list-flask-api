@@ -59,8 +59,13 @@ def update_users():
     user_id = current_user.id
     usuario = Usuario.query.get(user_id)
     
-    nome = request.json['nome']
-    email = request.json['email']
+    nome = request.json.get('nome')
+    email = request.json.get('email')
+
+    if nome is None:
+        nome = usuario.nome
+    if email is None:
+        email = usuario.email
 
     usuario.nome = nome
     usuario.email = email
@@ -222,4 +227,41 @@ def update_status_task_done(id, id_task):
     task.status = "Concluída"
 
     db.session.commit()	
+    return tarefa_schema.jsonify(task)
+
+@app.route("/todolist/<id>/task/<id_task>", methods=['PUT'])
+@login_required
+def update_task_priority(id, id_task):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
+
+    task = Tarefa.query.get(id_task)
+
+    if task is None:
+        return jsonify({'erro': 'Tarefa não encontrada!'})
+    
+    
+    if task.lista_de_tarefas_id != int(id):
+        return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
+
+
+    prioridade = request.json.get("prioridade")
+    
+    if prioridade is None:
+        prioridade = task.prioridade
+
+    if not isinstance(prioridade, int):
+        return jsonify({'erro': 'Prioridade inválida! Deve ser um número inteiro!'})    
+    
+    if prioridade < 1 or prioridade > 5:
+        return jsonify({'erro': 'Prioridade inválida! Deve ser um número de 1 a 4!'})
+    
+    task.prioridade = prioridade
+
+    db.session.commit()
     return tarefa_schema.jsonify(task)
