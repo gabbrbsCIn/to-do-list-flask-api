@@ -116,6 +116,12 @@ def update_todolist(id):
     titulo = request.json.get("titulo")  
     descricao = request.json.get("descricao")
 
+    if descricao is None:
+        descricao = todolist.descricao
+    
+    if titulo is None:
+        titulo = todolist.titulo
+
     todolist.titulo = titulo
     todolist.descricao = descricao
     
@@ -158,9 +164,7 @@ def add_task(id):
 
     titulo = request.json["titulo"]  
     descricao = request.json.get("descricao")
-    status = request.json.get("status")
-    if status == None:
-        status = "A fazer"
+    status = "A fazer"
     prazo_final = request.json.get("prazo_final")
     prioridade = request.json.get("prioridade")
     if prioridade == None:
@@ -171,3 +175,51 @@ def add_task(id):
     db.session.commit()
 
     return tarefa_schema.jsonify(new_task)
+
+@app.route("/todolist/<id>/task/<id_task>/doing", methods=['PUT'])
+@login_required
+def update_status_task_doing(id, id_task):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
+
+    task = Tarefa.query.get(id_task)
+
+    if task is None:
+        return jsonify({'erro': 'Tarefa não encontrada!'})
+    
+    if task.lista_de_tarefas_id != int(id):
+        return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
+
+    task.status = "Fazendo"
+    db.session.commit()
+    return tarefa_schema.jsonify(task)
+
+
+@app.route("/todolist/<id>/task/<id_task>/done", methods=['PUT'])
+@login_required
+def update_status_task_done(id, id_task):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
+
+    task = Tarefa.query.get(id_task)
+
+    if task is None:
+        return jsonify({'erro': 'Tarefa não encontrada!'})
+    
+    if task.lista_de_tarefas_id != int(id):
+        return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
+
+    task.status = "Concluída"
+
+    db.session.commit()	
+    return tarefa_schema.jsonify(task)
