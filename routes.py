@@ -265,3 +265,17 @@ def update_task_priority(id, id_task):
 
     db.session.commit()
     return tarefa_schema.jsonify(task)
+
+@app.route("/todolist/<id>/task", methods=['GET'])
+@login_required
+def get_task(id):
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
+
+    all_tasks = Tarefa.query.filter_by(lista_de_tarefas_id=id).all()
+    result = tarefas_schema.dump(all_tasks)
+    return jsonify(result)
