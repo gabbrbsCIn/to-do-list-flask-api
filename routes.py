@@ -310,3 +310,57 @@ def delete_task(id, id_task):
     db.session.delete(task)
     db.session.commit()
     return jsonify({'msg': 'Tarefa excluída com sucesso!'})
+
+@app.route("/todolist/<id>/task/done", methods=['GET'])
+@login_required
+def get_task_done(id):
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
+
+    all_tasks_done = Tarefa.query.filter_by(status="Concluída", lista_de_tarefas_id=id).all()
+
+    if not all_tasks_done:
+        return jsonify({'msg': 'Não há tarefas concluídas nesta lista de tarefas.'})
+
+    result = tarefas_schema.dump(all_tasks_done)
+    return jsonify(result)
+
+@app.route("/todolist/<id>/task/doing", methods=['GET'])
+@login_required
+def get_task_doing(id):
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
+
+    all_tasks_doing = Tarefa.query.filter_by(status="Fazendo", lista_de_tarefas_id=id).all()
+    
+    if not all_tasks_doing:
+        return jsonify({'msg': 'Não há tarefas em andamento nesta lista de tarefas.'})
+    
+    result = tarefas_schema.dump(all_tasks_doing)
+    return jsonify(result)
+
+@app.route("/todolist/<id>/task/todo", methods=['GET'])
+@login_required
+def get_task_todo(id):
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
+
+    all_tasks_todo = Tarefa.query.filter_by(status="A fazer", lista_de_tarefas_id=id).all()
+    
+    if not all_tasks_todo:
+        return jsonify({'msg': 'Não há tarefas a fazer nesta lista.'})
+    
+    result = tarefas_schema.dump(all_tasks_todo)
+    return jsonify(result)
