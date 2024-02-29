@@ -93,6 +93,14 @@ def delete_users():
 
 
 #Rotas da Lista de Tarefas
+@app.route("/todolist", methods=['GET'])
+@login_required
+def get_todolist():
+    user_id = current_user.id
+    all_todolist = ListaDeTarefas.query.filter_by(usuario_id=user_id).all()
+    result = listadetarefas_schema.dump(all_todolist)
+    return jsonify(result)
+
 @app.route("/todolist", methods=['POST'])
 @login_required
 def add_todolist():
