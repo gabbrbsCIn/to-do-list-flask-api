@@ -279,3 +279,26 @@ def get_task(id):
     all_tasks = Tarefa.query.filter_by(lista_de_tarefas_id=id).all()
     result = tarefas_schema.dump(all_tasks)
     return jsonify(result)
+
+@app.route("/todolist/<id>/task/<id_task>", methods=['DELETE'])
+@login_required
+def delete_task(id, id_task):
+
+    todolist = ListaDeTarefas.query.get(id)
+
+    if todolist is None:
+        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
+    if todolist.usuario_id != current_user.id:
+        return jsonify({'erro': 'Você não tem permissão para excluir tarefas desta lista!'})    
+
+    task = Tarefa.query.get(id_task)
+
+    if task is None:
+        return jsonify({'erro': 'Tarefa não encontrada!'})
+    
+    if task.lista_de_tarefas_id != int(id):
+        return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
+
+    db.session.delete(task)
+    db.session.commit()
+    return jsonify({'msg': 'Tarefa excluída com sucesso!'})
