@@ -16,7 +16,9 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-from routes import *
+from routes.todolist import *
+from routes.users import *
+from routes.tasks import *
 
 if __name__ == '__main__':
     app.run(debug=True)
