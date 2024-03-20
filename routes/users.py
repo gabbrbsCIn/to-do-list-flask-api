@@ -1,9 +1,15 @@
 from flask import request, jsonify, render_template
 from app import app, db, bcrypt
-from models import Usuario, ListaDeTarefas, Tarefa
-from flask_login import login_user, login_required, logout_user, current_user
-from schemas import *
 
+from models.users import Usuario
+from models.todolist import ListaDeTarefas
+from models.tasks import Tarefa
+
+from schemas.users import UsuarioSchema, usuario_schema, usuarios_schema
+from schemas.todolist import ListaDeTarefasSchema, listadetarefa_schema, listadetarefas_schema
+from schemas.tasks import TarefaSchema, tarefa_schema, tarefas_schema
+
+from flask_login import login_user, login_required, logout_user, current_user
 
 
 #Rotas do Usuário   
