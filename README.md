@@ -34,7 +34,7 @@ Este é um projeto de estudo que consiste em uma API em Python utilizando o fram
 
 1. Clone este repositório:
    ```
-   git clone https://github.com/seu-usuario/nome-do-repositorio.git
+   git clone https://github.com/gabbrbsCIn/to-do-list-flask-api.git
    ```
 
 2. Instale as dependências utilizando o pipenv:
