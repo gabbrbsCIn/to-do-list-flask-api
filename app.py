@@ -1,20 +1,17 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
-from flask_migrate import Migrate
+from config.initializers import init_app
 
 app = Flask(__name__)
-app.config.from_pyfile('config.py')
+app.config.from_pyfile('config/config.py')
 
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-migrate = Migrate(app, db)
-bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+app_user = init_app(app)
+db = app_user[0]
+ma = app_user[1]
+migrate = app_user[2]
+bcrypt = app_user[3]
+login_manager = app_user[4]
+
 
 from routes.todolist import *
 from routes.users import *

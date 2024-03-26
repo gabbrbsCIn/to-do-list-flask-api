@@ -11,26 +11,26 @@ from schemas.tasks import TarefaSchema, tarefa_schema, tarefas_schema
 
 from flask_login import login_user, login_required, logout_user, current_user
 
+from utils.checkPermission import check_permission
+from utils.getTaskById import get_task_by_id
+from utils.getTasksByStatus import get_tasks_by_status
 
 
-
-#Rotas da Tarefa
+# Rotas da Tarefa
 @app.route("/todolist/<id>/task", methods=['POST'])
 @login_required
 def add_task(id):
     todolist = ListaDeTarefas.query.get(id)
+    error = check_permission(todolist)
+    if error:
+        return error
 
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para adicionar tarefas a esta lista!'})    
-
-    titulo = request.json["titulo"]  
+    titulo = request.json["titulo"]
     descricao = request.json.get("descricao")
     status = "A fazer"
     prazo_final = request.json.get("prazo_final")
     prioridade = request.json.get("prioridade")
-    if prioridade == None:
+    if prioridade is None:
         prioridade = 4
 
     new_task = Tarefa(titulo, descricao, status, prazo_final, prioridade, id)
@@ -42,19 +42,12 @@ def add_task(id):
 @app.route("/todolist/<id>/task/<id_task>/doing", methods=['PUT'])
 @login_required
 def update_status_task_doing(id, id_task):
-
     todolist = ListaDeTarefas.query.get(id)
+    error = check_permission(todolist)
+    if error:
+        return error
 
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
-
-    task = Tarefa.query.get(id_task)
-
-    if task is None:
-        return jsonify({'erro': 'Tarefa não encontrada!'})
-    
+    task = get_task_by_id(id_task)
     if task.lista_de_tarefas_id != int(id):
         return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
 
@@ -62,63 +55,44 @@ def update_status_task_doing(id, id_task):
     db.session.commit()
     return tarefa_schema.jsonify(task)
 
-
 @app.route("/todolist/<id>/task/<id_task>/done", methods=['PUT'])
 @login_required
 def update_status_task_done(id, id_task):
-
     todolist = ListaDeTarefas.query.get(id)
+    error = check_permission(todolist)
+    if error:
+        return error
 
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
-
-    task = Tarefa.query.get(id_task)
-
-    if task is None:
-        return jsonify({'erro': 'Tarefa não encontrada!'})
-    
+    task = get_task_by_id(id_task)
     if task.lista_de_tarefas_id != int(id):
         return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
 
     task.status = "Concluída"
-
-    db.session.commit()	
+    db.session.commit()
     return tarefa_schema.jsonify(task)
 
 @app.route("/todolist/<id>/task/<id_task>", methods=['PUT'])
 @login_required
 def update_task_priority(id, id_task):
-
     todolist = ListaDeTarefas.query.get(id)
+    error = check_permission(todolist)
+    if error:
+        return error
 
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para alterar tarefas desta lista!'})    
-
-    task = Tarefa.query.get(id_task)
-
-    if task is None:
-        return jsonify({'erro': 'Tarefa não encontrada!'})
-    
-    
+    task = get_task_by_id(id_task)
     if task.lista_de_tarefas_id != int(id):
         return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
 
-
     prioridade = request.json.get("prioridade")
-    
     if prioridade is None:
         prioridade = task.prioridade
 
     if not isinstance(prioridade, int):
-        return jsonify({'erro': 'Prioridade inválida! Deve ser um número inteiro!'})    
-    
+        return jsonify({'erro': 'Prioridade inválida! Deve ser um número inteiro!'})
+
     if prioridade < 1 or prioridade > 5:
         return jsonify({'erro': 'Prioridade inválida! Deve ser um número de 1 a 4!'})
-    
+
     task.prioridade = prioridade
 
     db.session.commit()
@@ -126,34 +100,29 @@ def update_task_priority(id, id_task):
 
 @app.route("/todolist/<id>/task", methods=['GET'])
 @login_required
-def get_task(id):
+def get_tasks(id):
     todolist = ListaDeTarefas.query.get(id)
-
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
+    error = check_permission(todolist)
+    if error:
+        return error
 
     all_tasks = Tarefa.query.filter_by(lista_de_tarefas_id=id).all()
+
+    if not all_tasks:
+        return jsonify({'msg': 'Não há tarefas nesta lista.'})
+
     result = tarefas_schema.dump(all_tasks)
     return jsonify(result)
 
 @app.route("/todolist/<id>/task/<id_task>", methods=['DELETE'])
 @login_required
 def delete_task(id, id_task):
-
     todolist = ListaDeTarefas.query.get(id)
+    error = check_permission(todolist)
+    if error:
+        return error
 
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para excluir tarefas desta lista!'})    
-
-    task = Tarefa.query.get(id_task)
-
-    if task is None:
-        return jsonify({'erro': 'Tarefa não encontrada!'})
-    
+    task = get_task_by_id(id_task)
     if task.lista_de_tarefas_id != int(id):
         return jsonify({'erro': 'Tarefa não encontrada nesta lista!'})
 
@@ -164,43 +133,17 @@ def delete_task(id, id_task):
 @app.route("/todolist/<id>/task/done", methods=['GET'])
 @login_required
 def get_task_done(id):
-    todolist = ListaDeTarefas.query.get(id)
-
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
-
-    all_tasks_done = Tarefa.query.filter_by(status="Concluída", lista_de_tarefas_id=id).all()
-
-    if not all_tasks_done:
-        return jsonify({'msg': 'Não há tarefas concluídas nesta lista de tarefas.'})
-
-    result = tarefas_schema.dump(all_tasks_done)
-    return jsonify(result)
+    return get_tasks_by_status(id, "Concluída")
 
 @app.route("/todolist/<id>/task/doing", methods=['GET'])
 @login_required
 def get_task_doing(id):
-    todolist = ListaDeTarefas.query.get(id)
-
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para ver tarefas desta lista!'})    
-
-    all_tasks_doing = Tarefa.query.filter_by(status="Fazendo", lista_de_tarefas_id=id).all()
-    
-    if not all_tasks_doing:
-        return jsonify({'msg': 'Não há tarefas em andamento nesta lista de tarefas.'})
-    
-    result = tarefas_schema.dump(all_tasks_doing)
-    return jsonify(result)
+    return get_tasks_by_status(id, "Fazendo")
 
 @app.route("/todolist/<id>/task/todo", methods=['GET'])
 @login_required
 def get_task_todo(id):
-    todolist = ListaDeTarefas.query.get(id)
+    return get_tasks_by_status(id, "A fazer")
 
     if todolist is None:
         return jsonify({'erro': 'Lista de Tarefa não encontrada!'})

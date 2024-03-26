@@ -9,6 +9,10 @@ from schemas.users import UsuarioSchema, usuario_schema, usuarios_schema
 from schemas.todolist import ListaDeTarefasSchema, listadetarefa_schema, listadetarefas_schema
 from schemas.tasks import TarefaSchema, tarefa_schema, tarefas_schema
 
+from utils.checkPermission import check_permission
+from utils.getTaskById import get_task_by_id
+from utils.getTasksByStatus import get_tasks_by_status
+
 from flask_login import login_user, login_required, logout_user, current_user
 
 

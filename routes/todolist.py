@@ -9,6 +9,10 @@ from schemas.users import UsuarioSchema, usuario_schema, usuarios_schema
 from schemas.todolist import ListaDeTarefasSchema, listadetarefa_schema, listadetarefas_schema
 from schemas.tasks import TarefaSchema, tarefa_schema, tarefas_schema
 
+from utils.checkPermission import check_permission
+from utils.getTaskById import get_task_by_id
+from utils.getTasksByStatus import get_tasks_by_status
+
 from flask_login import login_user, login_required, logout_user, current_user
 
 
@@ -18,6 +22,8 @@ from flask_login import login_user, login_required, logout_user, current_user
 def get_todolist():
     user_id = current_user.id
     all_todolist = ListaDeTarefas.query.filter_by(usuario_id=user_id).all()
+    if not all_todolist:
+        return jsonify({'msg': 'Não há listas de tarefas cadastradas.'})
     result = listadetarefas_schema.dump(all_todolist)
     return jsonify(result)
 
@@ -37,14 +43,10 @@ def add_todolist():
 @app.route("/todolist/<id>", methods=['PUT'])
 @login_required
 def update_todolist(id):
-
     todolist = ListaDeTarefas.query.get(id)
-
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para alterar esta tarefa!'})
+    error = check_permission(todolist)
+    if error:
+        return error
 
     titulo = request.json.get("titulo")  
     descricao = request.json.get("descricao")
@@ -66,14 +68,10 @@ def update_todolist(id):
 @app.route("/todolist/<id>", methods=['DELETE'])
 @login_required
 def delete_todolist(id):
-
     todolist = ListaDeTarefas.query.get(id)
-
-    if todolist is None:
-        return jsonify({'erro': 'Lista de Tarefa não encontrada!'})
-    
-    if todolist.usuario_id != current_user.id:
-        return jsonify({'erro': 'Você não tem permissão para excluir esta tarefa!'})
+    error = check_permission(todolist)
+    if error:
+        return error
     
     tarefas_do_usuario = Tarefa.query.filter_by(lista_de_tarefas_id=id).all()
     for i in tarefas_do_usuario:
