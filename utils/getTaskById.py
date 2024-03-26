@@ -7,3 +7,4 @@ def get_task_by_id(id_task):
     if task is None:
         return jsonify({'erro': 'Tarefa não encontrada!'})
     return task
+    
